@@ -39,7 +39,7 @@ class MPLUG:
         ... )
     """
 
-    REPO_ID = 'rae-t2i/mplug_visual-question-answering_coco_large_en'
+    REPO_ID = 'diffusion-bench/mplug_visual-question-answering_coco_large_en'
 
     def __init__(self, model_dir: str = None, device: str = 'cuda'):
         from .mplug import MPlug
