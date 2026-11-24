@@ -14,7 +14,7 @@ This is a stripped-down fork of [QwenLM/Qwen-Image-Bench](https://github.com/Qwe
 
 - **Backend:** `backends/ms_swift_backend.py` (ms-swift `PtEngine`) → `backends/transformers_backend.py` (`TransformersJudge`), same `generate_batch(items)` interface
 - **No CLI:** `judge.py` / `compute_scores.py` argparse scripts replaced by `evaluate()` / `evaluate_batch()` library functions (no file IO, no Excel)
-- Standardized on `pyproject.toml` + uv, with `torch`/`torchvision` pinned to the CUDA 12.8 index
+- Standardized on `pyproject.toml` + uv; the consuming project chooses the `torch`/`torchvision` build
 
 ## Scoring
 
