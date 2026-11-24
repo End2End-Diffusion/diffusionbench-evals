@@ -48,6 +48,17 @@ QWEN3p5_VL_MODELS = {
         },
         'is_moe': True,
     },
+    'qwen3.5-122b-a10b': {
+        'tokenizer': {
+            'path': 'Qwen/Qwen3.5-122B-A10B',
+        },
+        'model': {
+            'path': 'Qwen/Qwen3.5-122B-A10B',
+            'torch_dtype': torch.bfloat16,
+            'device_map': 'auto',
+        },
+        'is_moe': True,
+    },
     # Qwen3.6 reuses the Qwen3.5 architecture (config architectures field points to
     # Qwen3_5(Moe)ForConditionalGeneration), so it loads with the same classes.
     'qwen3.6-27b': {
@@ -91,12 +102,15 @@ class Qwen3p5VLModel(VQAScoreModel):
         # model_path = self.model_info['model']['path']
         model_path = self.checkpoint
         qwen3_5_cls = Qwen3_5MoeForConditionalGeneration if self.model_info['is_moe'] else Qwen3_5ForConditionalGeneration
+        device_map = self.model_info['model']['device_map'] if 'device_map' in self.model_info['model'] else None
         self.model = qwen3_5_cls.from_pretrained(
             model_path,
             dtype=self.model_info['model']['torch_dtype'],
             cache_dir=self.cache_dir,
-            device_map=self.model_info['model']['device_map'] if 'device_map' in self.model_info['model'] else None,
-        ).to(self.device)
+            device_map=device_map,
+        )
+        if device_map is None:
+            self.model = self.model.to(self.device)
         self.processor = AutoProcessor.from_pretrained(
             self.model_info['tokenizer']['path'],
             cache_dir=self.cache_dir,

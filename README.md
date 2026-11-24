@@ -9,7 +9,7 @@ Eval shims for [DiffusionBench](https://github.com/End2End-Diffusion/diffusion-b
 | `t2v_metrics/` | `t2v_metrics` | VQAScore (image-text alignment), with both Qwen3.5 and Qwen3.6 series backends | [linzhiqiu/t2v_metrics](https://github.com/linzhiqiu/t2v_metrics) |
 | `fd_evaluator/` | `fd_evaluator` | FID / FDR6 / MIND across six representation spaces | [Jiawei-Yang/FD-loss](https://github.com/Jiawei-Yang/FD-loss), [toshas/torch-fidelity](https://github.com/toshas/torch-fidelity) |
 
-Each fork strips upstream to evaluation-only code, removes heavy deps (mmdet, modelscope, video stack), and standardizes on `pyproject.toml` + uv. All packages now require Hugging Face Transformers 5.3.0 (up from the v4 series). Numerical scores match the originals.
+Each fork strips upstream to evaluation-only code, removes heavy deps (mmdet, modelscope, video stack), and standardizes on `pyproject.toml` + uv. All packages now require Hugging Face Transformers 5.3.0 (up from the v4 series). DPG-Bench and GenAI-Bench match the official evaluators to within 1e-4. GenEval scoring rules match, but the HF Mask2Former detector uses different weights from the official MMDetection checkpoint, so end-to-end GenEval scores can differ by about 1 point. DPG-Bench and GenEval scores from revisions before the protocol fixes are not directly comparable.
 
 ## Install
 
@@ -23,6 +23,8 @@ t2v-metrics       = { git = "ssh://git@github.com/End2End-Diffusion/diffusionben
 fd-evaluator      = { git = "ssh://git@github.com/End2End-Diffusion/diffusionbench-evals.git", subdirectory = "fd_evaluator", branch = "main" }
 ```
 
+The packages do not choose a torch build: route `torch` / `torchvision` to the index you want (e.g. the PyTorch cu128 index) in the consuming project's own `[tool.uv.sources]`.
+
 Or pip:
 
 ```bash
@@ -33,6 +35,10 @@ pip install "git+https://github.com/End2End-Diffusion/diffusionbench-evals.git#s
 ```
 
 Usage examples: see each subdir's README.
+
+### Reproducing paper results
+
+Paper numbers were computed with branch [`paper-impl`](https://github.com/End2End-Diffusion/diffusionbench-evals/tree/paper-impl), before the DPG-Bench and GenEval protocol fixes. Pin it with `branch = "paper-impl"` instead of `branch = "main"`.
 
 ## Citation
 

@@ -50,7 +50,8 @@ class Score(nn.Module):
                 num_frames: Optional[int]=8,
                 **kwargs) -> torch.Tensor:
         """Return the similarity score(s) between the image(s)/video(s) and the text(s)
-        If there are m images/videos and n texts, return a m x n tensor
+        This fork returns N matched-pair scores (image_i, text_i), unlike upstream's
+        M x N cross-product API. Use batch_forward for datasets of image/text options.
         
         Args:
             images: Path to image/video file, or list of paths to image frames
@@ -59,7 +60,7 @@ class Score(nn.Module):
         """
 
         # Convert single inputs to lists
-        if isinstance(images, str):
+        if isinstance(images, (str, Image.Image)):
             images = [images]
         if isinstance(texts, str):
             texts = [texts]
@@ -71,6 +72,7 @@ class Score(nn.Module):
         # Note: video processing for video-native models is handled at the model level
         valid_video_extensions = {'.mp4', '.avi', '.mov', '.mkv'}
         if any(isinstance(img, str) and img[-4:].lower() in valid_video_extensions for img in images):
+            import cv2
             if self.model.video_mode == "concat":
                 delete_images = True
                 processed_images = []

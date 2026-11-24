@@ -22,7 +22,8 @@ A minimal, self-contained reimplementation of the [DPG-Bench](https://github.com
 Differences from the [reference implementation](https://github.com/TencentQQGYLab/ELLA/blob/main/dpg_bench/compute_dpg_bench.py):
 
 - **Category scores use all samples**: The reference computes L1/L2 category scores using only the last crop's raw scores (when `pic_num > 1`). This implementation uses raw scores from all samples for category aggregation.
-- Tiny (~0.05-0.06%) numerical differences in the scores.
+- Corrects the upstream CSV first-row omission: pandas already consumes the header. The reference drops question 1 for `partiprompts97`, then skips that prompt after a dependency error; this port evaluates all 1,065 prompts. Report this correction when comparing with legacy DPG scores.
+- Reference preprocessing: FP32, lowercased text padded/truncated to 25 tokens. Questions are batched (default 16); set `question_batch_size=1` for reference execution order. `batch_vqa(..., use_fp16=True)` remains an explicit non-reference option. ModelScope has no version pin upstream; this port was checked against ModelScope v1.9.5. Full weight/runtime equivalence is not certified.
 
 ## Installation
 

@@ -58,6 +58,17 @@ QWEN3_VL_MODELS = {
         },
         'is_moe': True,
     },
+    'qwen3-vl-235b-a22b': {
+        'tokenizer' : {
+            'path': 'Qwen/Qwen3-VL-235B-A22B-Instruct',
+        },
+        'model': {
+            'path': 'Qwen/Qwen3-VL-235B-A22B-Instruct',
+            'torch_dtype': torch.bfloat16,
+            'device_map': 'auto',
+        },
+        'is_moe': True,
+    }
 }
 
 class Qwen3VLModel(VQAScoreModel):
@@ -79,11 +90,15 @@ class Qwen3VLModel(VQAScoreModel):
         # model_path = self.model_info['model']['path']
         model_path = self.checkpoint
         qwen3_vl_cls = Qwen3VLMoeForConditionalGeneration if self.model_info['is_moe'] else Qwen3VLForConditionalGeneration
+        device_map = self.model_info['model']['device_map'] if 'device_map' in self.model_info['model'] else None
         self.model = qwen3_vl_cls.from_pretrained(
             model_path,
             dtype=self.model_info['model']['torch_dtype'],
             cache_dir=self.cache_dir,
-        ).to(self.device)
+            device_map=device_map,
+        )
+        if device_map is None:
+            self.model = self.model.to(self.device)
         self.processor = AutoProcessor.from_pretrained(
             self.model_info['tokenizer']['path'],
             cache_dir=self.cache_dir,

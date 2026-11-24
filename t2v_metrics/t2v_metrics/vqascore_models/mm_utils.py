@@ -8,11 +8,11 @@ from ..constants import HF_CACHE_DIR, IMAGE_TOKEN_INDEX
 # from moviepy.editor import VideoFileClip
 
 
-import cv2
 import numpy as np
 from math import ceil, sqrt
 
 def extract_frames(video_path, num_frames, output_dir):
+    import cv2
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
     
@@ -86,6 +86,7 @@ def concatenate_images_horizontal(images, dist_images):
     return new_img
 
 def concatenate_images_grid(images, dist_images, output_size):
+    import cv2
     num_images = len(images)
     # calc grid size based on amount of input imgs
     grid_size = max(2, ceil(sqrt(num_images)))

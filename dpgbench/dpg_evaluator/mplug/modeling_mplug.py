@@ -86,7 +86,8 @@ def find_pruneable_heads_and_indices(
 
 
 def get_head_mask(
-    head_mask: Optional[Tensor], num_hidden_layers: int, is_attention_chunked: bool = False
+    head_mask: Optional[Tensor], num_hidden_layers: int, dtype=torch.float32,
+    is_attention_chunked: bool = False
 ) -> Tensor:
     """
     Prepare the head mask if needed.
@@ -104,7 +105,7 @@ def get_head_mask(
         `[None]` for each layer.
     """
     if head_mask is not None:
-        head_mask = _convert_head_mask_to_5d(head_mask, num_hidden_layers)
+        head_mask = _convert_head_mask_to_5d(head_mask, num_hidden_layers, dtype)
         if is_attention_chunked is True:
             head_mask = head_mask.unsqueeze(-1)
     else:
@@ -985,6 +986,17 @@ class BertPreTrainedModel(PreTrainedModel):
     load_tf_weights = load_tf_weights_in_bert
     base_model_prefix = 'bert'
     _keys_to_ignore_on_load_missing = [r'position_ids']
+
+    def invert_attention_mask(self, encoder_attention_mask: Tensor) -> Tensor:
+        """Verbatim from transformers 5.3.0 ``ModuleUtilsMixin.invert_attention_mask``, which later transformers
+        releases removed; defined here so this vendored model behaves the same under any transformers version."""
+        if encoder_attention_mask.dim() == 3:
+            encoder_extended_attention_mask = encoder_attention_mask[:, None, :, :]
+        if encoder_attention_mask.dim() == 2:
+            encoder_extended_attention_mask = encoder_attention_mask[:, None, None, :]
+        encoder_extended_attention_mask = encoder_extended_attention_mask.to(dtype=self.dtype)  # fp16 compatibility
+        encoder_extended_attention_mask = (1.0 - encoder_extended_attention_mask) * torch.finfo(self.dtype).min
+        return encoder_extended_attention_mask
 
     def _init_weights(self, module):
         """ Initialize the weights """

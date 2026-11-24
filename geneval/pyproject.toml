@@ -22,13 +22,3 @@ include = ["geneval_evaluator*"]
 
 [tool.setuptools.package-data]
 geneval_evaluator = ["*.txt", "*.json"]
-
-[tool.uv.sources]
-torch = [
-    { index = "pytorch-cu128" },
-]
-
-[[tool.uv.index]]
-name = "pytorch-cu128"
-url = "https://download.pytorch.org/whl/cu128"
-explicit = true

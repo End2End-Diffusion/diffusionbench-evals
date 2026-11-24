@@ -19,7 +19,7 @@ def binary_mask_to_rle(mask):
         format.
     """
     if is_torch_tensor(mask):
-        mask = mask.numpy()
+        mask = mask.cpu().numpy()
 
     pixels = mask.flatten()
     pixels = np.concatenate([[0], pixels, [0]])
@@ -81,6 +81,13 @@ def post_process_instance_segmentation(
     for i in range(class_queries_logits.shape[0]):
         mask_pred = masks_queries_logits[i]
         mask_cls = class_queries_logits[i]
+        # MMDetection resizes logits before thresholding masks and scoring them.
+        # Resizing binary masks afterwards changes boundaries and confidence scores.
+        if target_sizes is not None:
+            mask_pred = torch.nn.functional.interpolate(
+                mask_pred[:, None], size=target_sizes[i], mode="bilinear",
+                align_corners=False,
+            )[:, 0]
 
         scores = torch.nn.functional.softmax(mask_cls, dim=-1)[:, :-1]
         labels = torch.arange(num_classes, device=device).unsqueeze(0).repeat(num_queries, 1).flatten(0, 1)
@@ -99,12 +106,7 @@ def post_process_instance_segmentation(
         pred_scores = scores_per_image * mask_scores_per_image
         pred_classes = labels_per_image
 
-        segmentation = torch.zeros(image_size) - 1
-        if target_sizes is not None:
-            segmentation = torch.zeros(target_sizes[i]) - 1
-            pred_masks = torch.nn.functional.interpolate(
-                pred_masks.unsqueeze(0), size=target_sizes[i], mode="nearest"
-            )[0]
+        segmentation = torch.full(mask_pred.shape[-2:], -1, device=device)
 
         instance_maps, segments = [], []
         current_segment_id = 0
@@ -118,7 +120,7 @@ def post_process_instance_segmentation(
                         "id": current_segment_id,
                         "label_id": pred_classes[j].item(),
                         "was_fused": False,
-                        "score": round(score, 6),
+                        "score": score,
                     }
                 )
                 current_segment_id += 1
@@ -178,15 +180,33 @@ def _zero_shot_classifier(classnames, templates, clip_model, clip_processor, dev
     return zeroshot_weights
 
 
+def _clip_image_crop(image, processor):
+    """Match OpenCLIP/torchvision resize and round-to-nearest center crop."""
+    image = image.convert("RGB")
+    width, height = image.size
+    size = processor.size["shortest_edge"]
+    if width <= height:
+        resized = (size, int(size * height / width))
+    else:
+        resized = (int(size * width / height), size)
+    image = image.resize(resized, resample=Image.Resampling.BICUBIC)
+    crop = processor.crop_size
+    left = round((resized[0] - crop["width"]) / 2)
+    top = round((resized[1] - crop["height"]) / 2)
+    return image.crop((left, top, left + crop["width"], top + crop["height"]))
+
+
 def _run_classification(classifier, dataloader, clip_model, clip_processor, device):
     with torch.no_grad():
         all_logits = []
         # Get logit_scale from the model (crucial for proper classification!)
         logit_scale = clip_model.logit_scale.exp()
-        
+
         for images in dataloader:
+            images = [_clip_image_crop(image, clip_processor.image_processor) for image in images]
             inputs = clip_processor(
-                images=images, return_tensors="pt", input_data_format="channels_last"
+                images=images, return_tensors="pt", input_data_format="channels_last",
+                do_resize=False, do_center_crop=False,
             ).to(device)
             image_features = clip_model.get_image_features(**inputs).pooler_output
             image_features = image_features / image_features.norm(dim=-1, keepdim=True)
@@ -254,4 +274,5 @@ def _mask_to_bbox(mask):
         return None
     y1, y2 = np.where(rows)[0][[0, -1]]
     x1, x2 = np.where(cols)[0][[0, -1]]
-    return np.array([x1, y1, x2, y2], dtype=np.float32)
+    # MMDetection/PIL use exclusive right and bottom box boundaries.
+    return np.array([x1, y1, x2 + 1, y2 + 1], dtype=np.float32)
