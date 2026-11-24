@@ -5,6 +5,7 @@ description = "Minimal GenEval2 (Soft-TIFA) evaluator for text-to-image generati
 license = "MIT"
 requires-python = ">=3.10"
 dependencies = [
+  "accelerate>=1.0",
   "numpy>=2.2",
   "pandas>=2.3",
   "pillow>=12.1",
