@@ -22,9 +22,9 @@ def load_models(device="cuda", detector_model=None, clip_model=None):
     clip_model = clip_model or DEFAULT_CLIP_MODEL
     clip_model = CLIP_MODEL_MAPPING.get(clip_model, clip_model)
 
-    object_detector = Mask2FormerForUniversalSegmentation.from_pretrained(detector_model).to(device)
+    object_detector = Mask2FormerForUniversalSegmentation.from_pretrained(detector_model).to(device).eval()
     detector_processor = Mask2FormerImageProcessor.from_pretrained(detector_model)
-    clip_model_instance = CLIPModel.from_pretrained(clip_model).to(device)
+    clip_model_instance = CLIPModel.from_pretrained(clip_model).to(device).eval()
     clip_processor = CLIPProcessor.from_pretrained(clip_model, use_fast=False)
 
     with open(os.path.join(os.path.dirname(__file__), "object_names.txt")) as cls_file:
@@ -209,6 +209,9 @@ def evaluate_batch(images, metadata_list, models, device="cuda", options=None, s
     options = {**DEFAULT_OPTIONS, **(options or {})}
     color_classifiers = {}
     results = []
+
+    if len(images) != len(metadata_list):
+        raise ValueError("images and metadata_list must have the same length")
 
     # Count total images for progress bar
     total_images = sum(len(img_list) for img_list in images)

@@ -83,10 +83,10 @@ class MPLUG:
 
     def preprocess_questions(self, questions: List[str]):
         return self.tokenizer(
-            questions,
-            padding='longest',
+            [question.lower() for question in questions],
+            padding='max_length',
             truncation=True,
-            max_length=35,
+            max_length=25,
             return_tensors='pt'
         ).to(self.device)
 
@@ -96,7 +96,7 @@ class MPLUG:
         return self.batch_vqa([image], [question])[0]
 
     @torch.no_grad()
-    def batch_vqa(self, images: List[Image.Image], questions: List[str], use_fp16: bool = True) -> List[str]:
+    def batch_vqa(self, images: List[Image.Image], questions: List[str], use_fp16: bool = False) -> List[str]:
         """Batch inference for multiple image-question pairs."""
         if len(images) > 1 and all(img is images[0] for img in images):
             single_tensor = self.preprocess_image(images[0]).to(self.device)
@@ -105,7 +105,7 @@ class MPLUG:
             image_tensor = self.preprocess_images(images)
         question_input = self.preprocess_questions(questions)
 
-        with torch.amp.autocast('cuda', enabled=use_fp16):
+        with torch.amp.autocast(self.device.type, enabled=use_fp16):
             topk_ids, _ = self.model(
                 image=image_tensor,
                 question=question_input,
@@ -114,7 +114,7 @@ class MPLUG:
 
         answers = []
         for ids in topk_ids:
-            answer = self.tokenizer.decode(ids[0]).replace('[SEP]', '').replace('[CLS]', '').replace('[PAD]', '').strip()
+            answer = self.tokenizer.decode(ids[0], skip_special_tokens=True)
             answers.append(answer)
 
         return answers
@@ -142,8 +142,8 @@ def load_dpg_metadata(
 
     data = pd.read_csv(csv_path)
     for i, line in data.iterrows():
-        if i == 0:  # skip first row like reference
-            continue
+        # pandas already consumed the header. Skipping i=0 drops question 1
+        # of partiprompts97 and leaves dangling dependency edges in the reference.
         current_id = str(line.item_id)
         qid = int(line.proposition_id)
 

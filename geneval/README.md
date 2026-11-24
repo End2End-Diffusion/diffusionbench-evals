@@ -16,7 +16,14 @@ A minimal, self-contained reimplementation of the [GenEval](https://github.com/d
 - Reimplemented `post_process_instance_segmentation` locally to avoid version-sensitive transformers internals.
 - Reduced dependencies to 6 direct packages (numpy, pandas, pillow, torch, tqdm, transformers).
 - Switched from `requirements.txt` (pip freeze) to a proper `pyproject.toml` with uv for dependency management.
-- Scores now closely match the original implementation.
+- Detection-rule and aggregation parity are tested; the HF detector uses different weights from the official MMDetection checkpoint.
+
+### Evaluator fixes (2026-09-20)
+
+- **Bounding boxes:** use `x_max + 1` / `y_max + 1` for exclusive right/bottom boundaries, matching MMDetection and PIL. Previously, object crops lost their last row and column.
+- **CLIP center crop:** match OpenCLIP/torchvision's round-to-nearest offsets instead of HF's floor rounding, which can shift a crop by one pixel and change its predicted color.
+
+With official detections held fixed, corrected scoring differs on only 1/2,212 images (a precision-sensitive color decision). End-to-end scores still differ because the detector weights/runtime differ.
 
 ## Installation
 

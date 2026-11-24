@@ -12,7 +12,8 @@ def compute_vqa_scores(
     qid2question: Dict[int, str],
     qid2dependency: Dict[int, List[int]],
     vqa_fn: Callable[[List[Image.Image], List[str]], List[str]],
-    image: Image.Image
+    image: Image.Image,
+    question_batch_size: int = 16,
 ) -> Tuple[Dict[int, float], Dict[int, float], Dict[int, bool]]:
     """
     Compute VQA scores for all questions on an image.
@@ -22,22 +23,25 @@ def compute_vqa_scores(
     """
     raw_scores = {}
 
-    # Sequential inference to match reference implementation
-    # for qid, question in qid2question.items():
-    #     answer = vqa_fn([image], [question])[0]
-    #     raw_scores[qid] = 1.0 if answer == 'yes' else 0.0
-
-    # Batched inference to match reference implementation
-    answers = vqa_fn([image] * len(qid2question), list(qid2question.values()))
-    for qid, answer in zip(qid2question.keys(), answers):
-        raw_scores[qid] = 1.0 if answer == 'yes' else 0.0
+    # Fixed-length FP32 batches preserve the reference input representation.
+    # Set question_batch_size=1 for the original execution order.
+    if question_batch_size < 1:
+        raise ValueError("question_batch_size must be positive")
+    questions = list(qid2question.items())
+    for start in range(0, len(questions), question_batch_size):
+        batch = questions[start:start + question_batch_size]
+        answers = vqa_fn([image] * len(batch), [q for _, q in batch])
+        if len(answers) != len(batch):
+            raise ValueError("VQA must return one answer per question")
+        for (qid, _), answer in zip(batch, answers):
+            raw_scores[qid] = float(answer == 'yes')
 
     adjusted_scores = raw_scores.copy()
     validity = {}
 
     for qid, parent_ids in qid2dependency.items():
         any_parent_no = any(
-            adjusted_scores.get(pid, 1.0) == 0
+            adjusted_scores[pid] == 0
             for pid in parent_ids
             if pid != 0
         )
@@ -56,6 +60,7 @@ def compute_sample_score(
     prompt2id: Dict[str, str],
     question_dict: Dict[str, Dict],
     vqa_fn: Callable[[List[Image.Image], List[str]], List[str]],
+    question_batch_size: int = 16,
 ) -> Tuple[float, Dict[int, str], Dict[int, float]]:
     """
     Compute DPG score for a single (image, prompt) pair.
@@ -76,7 +81,7 @@ def compute_sample_score(
     qid2dependency = metadata['qid2dependency']
 
     raw_scores, adjusted_scores, _ = compute_vqa_scores(
-        qid2question, qid2dependency, vqa_fn, image
+        qid2question, qid2dependency, vqa_fn, image, question_batch_size
     )
     score = sum(adjusted_scores.values()) / len(adjusted_scores)
 
@@ -89,6 +94,7 @@ def evaluate_batch(
     prompt2id: Dict[str, str],
     question_dict: Dict[str, Dict],
     vqa_fn: Callable[[List[Image.Image], List[str]], List[str]],
+    question_batch_size: int = 16,
 ) -> List[Dict]:
     """
     Evaluate a batch of (image, prompt) pairs and return per-sample results.
@@ -108,7 +114,7 @@ def evaluate_batch(
     results = []
     for image, prompt in zip(images, prompts):
         score, qid2tuple, raw_scores = compute_sample_score(
-            image, prompt, prompt2id, question_dict, vqa_fn
+            image, prompt, prompt2id, question_dict, vqa_fn, question_batch_size
         )
         results.append({
             'score': score,
@@ -161,6 +167,7 @@ def evaluate(
     prompt2id: Dict[str, str],
     question_dict: Dict[str, Dict],
     vqa_fn: Callable[[List[Image.Image], List[str]], List[str]],
+    question_batch_size: int = 16,
 ) -> Tuple[float, Dict[str, float], Dict[str, float]]:
     """
     Evaluate a list of (image, prompt) pairs.
@@ -175,5 +182,5 @@ def evaluate(
     Returns:
         Tuple of (mean_score, l1_category_scores, l2_category_scores)
     """
-    results = evaluate_batch(images, prompts, prompt2id, question_dict, vqa_fn)
+    results = evaluate_batch(images, prompts, prompt2id, question_dict, vqa_fn, question_batch_size)
     return aggregate_results(results)
