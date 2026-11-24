@@ -1,0 +1,29 @@
+[project]
+name = "prism_bench_evaluator"
+version = "0.1.0"
+description = "Minimal PRISM-Bench evaluator (Qwen2.5-VL or GPT-4.1 judge) for text-to-image generation"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = [
+  "accelerate>=1.0",
+  "demjson3>=3.0",
+  "numpy>=2.2",
+  "openai>=1.0",
+  "pandas>=2.3",
+  "qwen-vl-utils>=0.0.8",
+  "pillow>=12.1",
+  "torch>=2.10",
+  "torchvision>=0.25",
+  "tqdm>=4.67",
+  "transformers>=5.3.0",
+]
+
+[build-system]
+requires = ["setuptools>=75.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["prism_bench_evaluator*"]
+
+[tool.setuptools.package-data]
+prism_bench_evaluator = ["*.json", "*.jsonl"]

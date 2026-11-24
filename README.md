@@ -1,6 +1,6 @@
 # diffusionbench-evals
 
-Eval shims for [DiffusionBench](https://github.com/End2End-Diffusion/diffusion-bench), updated from [nanovisionx/nanogen-evals](https://github.com/nanovisionx/nanogen-evals). Four independent image generation evaluators consolidated into one repo, each installable as its own package.
+Eval shims for [DiffusionBench](https://github.com/End2End-Diffusion/diffusion-bench), updated from [nanovisionx/nanogen-evals](https://github.com/nanovisionx/nanogen-evals). Seven independent image generation evaluators consolidated into one repo, each installable as its own package.
 
 | Subdir | Package | Metric | Upstream |
 |---|---|---|---|
@@ -8,6 +8,9 @@ Eval shims for [DiffusionBench](https://github.com/End2End-Diffusion/diffusion-b
 | `geneval/` | `geneval_evaluator` | GenEval (object presence, count, color, position) | [djghosh13/geneval](https://github.com/djghosh13/geneval) |
 | `t2v_metrics/` | `t2v_metrics` | VQAScore (image-text alignment), with both Qwen3.5 and Qwen3.6 series backends | [linzhiqiu/t2v_metrics](https://github.com/linzhiqiu/t2v_metrics) |
 | `fd_evaluator/` | `fd_evaluator` | FID / FDR6 / MIND across six representation spaces | [Jiawei-Yang/FD-loss](https://github.com/Jiawei-Yang/FD-loss), [toshas/torch-fidelity](https://github.com/toshas/torch-fidelity) |
+| `geneval2/` | `geneval2_evaluator` | GenEval2 (Soft-TIFA VQA scoring) | [facebookresearch/GenEval2](https://github.com/facebookresearch/GenEval2) |
+| `prism_bench/` | `prism_bench_evaluator` | PRISM-Bench (Qwen2.5-VL or GPT-4.1 judge, 7 tracks) | [rongyaofang/prism-bench](https://github.com/rongyaofang/prism-bench) |
+| `qwen-image-bench/` | `qwen_image_bench_evaluator` | Qwen-Image-Bench (VLM-judge checklist scoring) | [QwenLM/Qwen-Image-Bench](https://github.com/QwenLM/Qwen-Image-Bench) |
 
 Each fork strips upstream to evaluation-only code, removes heavy deps (mmdet, modelscope, video stack), and standardizes on `pyproject.toml` + uv. All packages now require Hugging Face Transformers 5.3.0 (up from the v4 series). DPG-Bench and GenAI-Bench match the official evaluators to within 1e-4. GenEval scoring rules match, but the HF Mask2Former detector uses different weights from the official MMDetection checkpoint, so end-to-end GenEval scores can differ by about 1 point. DPG-Bench and GenEval scores from revisions before the protocol fixes are not directly comparable.
 
@@ -21,6 +24,9 @@ dpg-evaluator     = { git = "ssh://git@github.com/End2End-Diffusion/diffusionben
 geneval-evaluator = { git = "ssh://git@github.com/End2End-Diffusion/diffusionbench-evals.git", subdirectory = "geneval",     branch = "main" }
 t2v-metrics       = { git = "ssh://git@github.com/End2End-Diffusion/diffusionbench-evals.git", subdirectory = "t2v_metrics", branch = "main" }
 fd-evaluator      = { git = "ssh://git@github.com/End2End-Diffusion/diffusionbench-evals.git", subdirectory = "fd_evaluator", branch = "main" }
+geneval2-evaluator         = { git = "ssh://git@github.com/End2End-Diffusion/diffusionbench-evals.git", subdirectory = "geneval2",         branch = "main" }
+prism-bench-evaluator      = { git = "ssh://git@github.com/End2End-Diffusion/diffusionbench-evals.git", subdirectory = "prism_bench",      branch = "main" }
+qwen-image-bench-evaluator = { git = "ssh://git@github.com/End2End-Diffusion/diffusionbench-evals.git", subdirectory = "qwen-image-bench", branch = "main" }
 ```
 
 The packages do not choose a torch build: route `torch` / `torchvision` to the index you want (e.g. the PyTorch cu128 index) in the consuming project's own `[tool.uv.sources]`.
@@ -32,6 +38,9 @@ pip install "git+https://github.com/End2End-Diffusion/diffusionbench-evals.git#s
 pip install "git+https://github.com/End2End-Diffusion/diffusionbench-evals.git#subdirectory=geneval"
 pip install "git+https://github.com/End2End-Diffusion/diffusionbench-evals.git#subdirectory=t2v_metrics"
 pip install "git+https://github.com/End2End-Diffusion/diffusionbench-evals.git#subdirectory=fd_evaluator"
+pip install "git+https://github.com/End2End-Diffusion/diffusionbench-evals.git#subdirectory=geneval2"
+pip install "git+https://github.com/End2End-Diffusion/diffusionbench-evals.git#subdirectory=prism_bench"
+pip install "git+https://github.com/End2End-Diffusion/diffusionbench-evals.git#subdirectory=qwen-image-bench"
 ```
 
 Usage examples: see each subdir's README.
