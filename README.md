@@ -6,7 +6,7 @@ Eval shims for [DiffusionBench](https://github.com/End2End-Diffusion/diffusion-b
 |---|---|---|---|
 | `dpgbench/` | `dpg_evaluator` | DPG-Bench (VQA-based composition) | [TencentQQGYLab/ELLA](https://github.com/TencentQQGYLab/ELLA) |
 | `geneval/` | `geneval_evaluator` | GenEval (object presence, count, color, position) | [djghosh13/geneval](https://github.com/djghosh13/geneval) |
-| `t2v_metrics/` | `t2v_metrics` | VQAScore (image-text alignment), with both Qwen3.5 and Qwen3.6 series backends | [linzhiqiu/t2v_metrics](https://github.com/linzhiqiu/t2v_metrics) |
+| `t2v_metrics/` | `t2v_metrics` | VQAScore (image-text alignment), with Qwen3.5, Qwen3.6 and Qwen3.8 series backends | [linzhiqiu/t2v_metrics](https://github.com/linzhiqiu/t2v_metrics) |
 | `fd_evaluator/` | `fd_evaluator` | FID / FDR6 / MIND across six representation spaces | [Jiawei-Yang/FD-loss](https://github.com/Jiawei-Yang/FD-loss), [toshas/torch-fidelity](https://github.com/toshas/torch-fidelity) |
 | `geneval2/` | `geneval2_evaluator` | GenEval2 (Soft-TIFA VQA scoring) | [facebookresearch/GenEval2](https://github.com/facebookresearch/GenEval2) |
 | `prism_bench/` | `prism_bench_evaluator` | PRISM-Bench (Qwen2.5-VL or GPT-4.1 judge, 7 tracks) | [rongyaofang/prism-bench](https://github.com/rongyaofang/prism-bench) |

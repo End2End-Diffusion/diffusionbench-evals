@@ -74,7 +74,7 @@ For a custom OpenAI-compatible model name, pass `backend="openai"`. A preconfigu
 
 ### Judge models
 
-Local judges are loaded via `AutoModelForImageTextToText`, so any Qwen-VL family works — pass a key from `HF_JUDGE_MODELS` (or a full HF / local path) as `model_name`: `qwen2.5-vl-{3b,7b,32b,72b}`, `qwen3-vl-{2b,4b,8b,32b,30b-a3b}`, `qwen3.5-{4b,9b,27b,35b-a3b}`, `qwen3.6-{27b,35b-a3b}`. The default remains **Qwen2.5-VL-72B** for backward compatibility. GPT-4.1 is available through `gpt-4.1`, `gpt4.1`, or the pinned `gpt-4.1-2025-04-14` model name.
+Local judges are loaded via `AutoModelForImageTextToText`, so any Qwen-VL family works — pass a key from `HF_JUDGE_MODELS` (or a full HF / local path) as `model_name`: `qwen2.5-vl-{3b,7b,32b,72b}`, `qwen3-vl-{2b,4b,8b,32b,30b-a3b}`, `qwen3.5-{4b,9b,27b,35b-a3b}`, `qwen3.6-{27b,35b-a3b}`, `qwen3.8-27b`. The default remains **Qwen2.5-VL-72B** for backward compatibility. GPT-4.1 is available through `gpt-4.1`, `gpt4.1`, or the pinned `gpt-4.1-2025-04-14` model name.
 
 ### Reference protocol
 

@@ -14,6 +14,7 @@ This is a stripped-down fork of [linzhiqiu/t2v_metrics](https://github.com/linzh
   - **Qwen3-VL**: `qwen3-vl-2b`, `qwen3-vl-4b`, `qwen3-vl-8b`, `qwen3-vl-32b`, `qwen3-vl-30b-a3b` (MoE), `qwen3-vl-235b-a22b` (MoE)
   - **Qwen3.5**: `qwen3.5-4b`, `qwen3.5-9b`, `qwen3.5-27b`, `qwen3.5-35b-a3b` (MoE), `qwen3.5-122b-a10b` (MoE)
   - **Qwen3.6**: `qwen3.6-27b`, `qwen3.6-35b-a3b` (MoE)
+  - **Qwen3.8**: `qwen3.8-27b`
 
 The largest BF16 checkpoints (`qwen3-vl-235b-a22b` and `qwen3.5-122b-a10b`) are automatically distributed across the available devices with `device_map="auto"`. Smaller checkpoints are loaded directly onto the requested `device`.
 
