@@ -81,6 +81,17 @@ QWEN3p5_VL_MODELS = {
         },
         'is_moe': True,
     },
+    # Qwen3.8-27B is also a dense Qwen3_5ForConditionalGeneration checkpoint.
+    'qwen3.8-27b': {
+        'tokenizer': {
+            'path': 'Qwen/Qwen3.8-27B',
+        },
+        'model': {
+            'path': 'Qwen/Qwen3.8-27B',
+            'torch_dtype': torch.bfloat16,
+        },
+        'is_moe': False,
+    },
 }
 
 class Qwen3p5VLModel(VQAScoreModel):

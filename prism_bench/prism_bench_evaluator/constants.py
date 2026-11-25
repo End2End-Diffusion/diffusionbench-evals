@@ -37,6 +37,7 @@ HF_JUDGE_MODELS = {
     "qwen3.5-122b-a10b": "Qwen/Qwen3.5-122B-A10B",  # MoE
     "qwen3.6-27b": "Qwen/Qwen3.6-27B",
     "qwen3.6-35b-a3b": "Qwen/Qwen3.6-35B-A3B",  # MoE
+    "qwen3.8-27b": "Qwen/Qwen3.8-27B",
 }
 
 # OpenAI-compatible API judges. Both spellings are accepted for convenience, while the
