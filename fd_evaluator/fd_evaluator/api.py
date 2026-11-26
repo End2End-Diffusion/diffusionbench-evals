@@ -46,6 +46,7 @@ def compute_metrics(
     *,
     fid_reference: str = "imagenet_256_fid_stats",
     reference_images: Optional[np.ndarray | str] = None,
+    online_reference: bool = False,
     device: str = "cuda",
     batch_size: int = 64,
     num_projections: int = 1000,
@@ -69,6 +70,10 @@ def compute_metrics(
             "MIND metrics require reference_images (path to a uint8 NHWC npz, "
             "e.g. imagenet-256-val.npz). Got reference_images=None."
         )
+    # online_reference: FD/FID reference moments come from reference_images (same extractor)
+    # instead of the stored catalogue stats.
+    if online_reference and ref_arr is None:
+        raise ValueError("online_reference=True requires reference_images.")
 
     results: dict[str, float] = {}
     for ext_name in needed:
@@ -107,23 +112,8 @@ def compute_metrics(
         if ext_name == "inception" and "inception_score" in requested:
             results["inception_score"] = float(_inception_score(gen_logits))
 
-        if need_frechet:
-            need_fdr_branch = (
-                f"fdr_{ext_name}" in requested
-                or f"fd_{ext_name}" in requested
-                or "fdr6" in requested
-            )
-            if need_fdr_branch:
-                mu_ref, sig_ref = load_moments(spec.default_reference)
-                fd = frechet_distance(gen_mu, gen_sigma, mu_ref, sig_ref)
-                if spec.norm_const > 0:
-                    results[f"fdr_{ext_name}"] = fd / spec.norm_const
-
-            if ext_name == "inception" and "fid" in requested:
-                mu_g, sig_g = load_moments(fid_reference)
-                results["fid"] = frechet_distance(gen_mu, gen_sigma, mu_g, sig_g)
-
-        if need_features:
+        ref_feats = None
+        if need_features or (online_reference and need_frechet):
             ref_feats = _extract_reference_features(
                 extractor=extractor,
                 spec=spec,
@@ -138,6 +128,29 @@ def compute_metrics(
                 ),
                 verbose=verbose,
             )
+        if online_reference and need_frechet:
+            acc = FrechetAccumulator(spec.feat_dim)
+            acc.update(ref_feats)
+            ref_moments = acc.finalize()
+
+        if need_frechet:
+            need_fdr_branch = (
+                f"fdr_{ext_name}" in requested
+                or f"fd_{ext_name}" in requested
+                or "fdr6" in requested
+            )
+            if need_fdr_branch:
+                mu_ref, sig_ref = ref_moments if online_reference else load_moments(spec.default_reference)
+                fd = frechet_distance(gen_mu, gen_sigma, mu_ref, sig_ref)
+                results[f"fd_{ext_name}"] = fd
+                if spec.norm_const > 0:
+                    results[f"fdr_{ext_name}"] = fd / spec.norm_const
+
+            if ext_name == "inception" and "fid" in requested:
+                mu_g, sig_g = ref_moments if online_reference else load_moments(fid_reference)
+                results["fid"] = frechet_distance(gen_mu, gen_sigma, mu_g, sig_g)
+
+        if need_features:
             mind = mind_from_features(
                 gen_feats, ref_feats, num_projections=num_projections, rng_seed=rng_seed
             )
