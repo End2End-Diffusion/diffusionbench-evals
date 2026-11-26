@@ -12,7 +12,7 @@ from .api import compute_metrics
 from .format import format_results
 
 _DEFAULT_REF_IMAGES = "./data/imagenet/imagenet-256-val.npz"
-_DEFAULT_CACHE_DIR = str(Path.home() / ".cache" / "nanogen-evals" / "features")
+_DEFAULT_CACHE_DIR = str(Path.home() / ".cache" / "diffusionbench-evals" / "features")
 _DEFAULT_METRICS = "fid,inception_score,fdr6,mind6"
 
 
@@ -23,11 +23,11 @@ def main(argv: list[str] | None = None) -> int:
         description=__doc__,
         epilog=(
             "Env overrides (optional):\n"
-            "  NANOGEN_EVALS_STATS_DIR   point at a local dir of *.npz stats "
+            "  DIFFUSIONBENCH_EVALS_STATS_DIR   point at a local dir of *.npz stats "
             "(disables HF download)\n"
-            "  NANOGEN_EVALS_REF_IMAGES  path to the raw imagenet val npz; "
+            "  DIFFUSIONBENCH_EVALS_REF_IMAGES  path to the raw imagenet val npz; "
             "default %s\n"
-            "  NANOGEN_EVALS_CACHE_DIR   feature cache; default %s\n"
+            "  DIFFUSIONBENCH_EVALS_CACHE_DIR   feature cache; default %s\n"
         )
         % (_DEFAULT_REF_IMAGES, _DEFAULT_CACHE_DIR),
     )
@@ -47,14 +47,14 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     metrics = [m.strip() for m in args.metrics.split(",") if m.strip()]
-    ref_images = os.environ.get("NANOGEN_EVALS_REF_IMAGES", _DEFAULT_REF_IMAGES)
-    cache_dir = os.environ.get("NANOGEN_EVALS_CACHE_DIR", _DEFAULT_CACHE_DIR)
+    ref_images = os.environ.get("DIFFUSIONBENCH_EVALS_REF_IMAGES", _DEFAULT_REF_IMAGES)
+    cache_dir = os.environ.get("DIFFUSIONBENCH_EVALS_CACHE_DIR", _DEFAULT_CACHE_DIR)
     needs_mind = any(m.startswith("mind") for m in metrics)
     if needs_mind and not Path(ref_images).exists():
         raise SystemExit(
             f"[fdeval] MIND metric requested but raw-image reference not found:\n"
             f"  {ref_images}\n"
-            f"Set NANOGEN_EVALS_REF_IMAGES to override, or drop mind6 from --metrics."
+            f"Set DIFFUSIONBENCH_EVALS_REF_IMAGES to override, or drop mind6 from --metrics."
         )
 
     print(f"[fdeval] npz: {args.npz}")

@@ -1,4 +1,4 @@
-"""Reference stats: name -> path. HF download cached under ~/.cache/nanogen-evals/stats/."""
+"""Reference stats: name -> path. HF download cached under ~/.cache/diffusionbench-evals/stats/."""
 
 from __future__ import annotations
 
@@ -30,18 +30,18 @@ def resolve(name: str) -> str:
         )
     filename = refs[name]
 
-    local_dir = os.environ.get("NANOGEN_EVALS_STATS_DIR")
+    local_dir = os.environ.get("DIFFUSIONBENCH_EVALS_STATS_DIR")
     if local_dir:
         p = Path(local_dir) / filename
         if not p.exists():
             raise FileNotFoundError(
-                f"NANOGEN_EVALS_STATS_DIR={local_dir} but {p} not found"
+                f"DIFFUSIONBENCH_EVALS_STATS_DIR={local_dir} but {p} not found"
             )
         return str(p)
 
     from huggingface_hub import hf_hub_download
 
-    cache_dir = Path(os.environ.get("NANOGEN_EVALS_CACHE_DIR", _default_cache_dir()))
+    cache_dir = Path(os.environ.get("DIFFUSIONBENCH_EVALS_CACHE_DIR", _default_cache_dir()))
     cache_dir.mkdir(parents=True, exist_ok=True)
     path = hf_hub_download(
         repo_id=cat["hf_repo_id"],
@@ -53,7 +53,7 @@ def resolve(name: str) -> str:
 
 
 def _default_cache_dir() -> str:
-    return str(Path.home() / ".cache" / "nanogen-evals" / "stats")
+    return str(Path.home() / ".cache" / "diffusionbench-evals" / "stats")
 
 
 def load_moments(name_or_path: str) -> tuple[np.ndarray, np.ndarray]:
